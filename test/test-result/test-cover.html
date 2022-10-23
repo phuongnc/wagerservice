@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>handler: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">wagerservice/cmd/entity-server/handler/handler.go (82.4%)</option>
+				
+				<option value="file1">wagerservice/cmd/entity-server/handler/wager.go (81.2%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package handler
+
+import (
+        "fmt"
+        "net/http"
+        "strings"
+        "wagerservice/cmd/entity-server/service/wager/wagerdto"
+
+        "github.com/asaskevich/govalidator"
+        "github.com/gin-gonic/gin"
+)
+
+type ErrorRes struct {
+        Error string `json:"error"`
+}
+
+type Gin struct {
+        C *gin.Context
+}
+
+func init() <span class="cov8" title="1">{
+        govalidator.CustomTypeTagMap.Set("ValidSellingPrice", govalidator.CustomTypeValidator(func(i interface{}, context interface{}) bool </span><span class="cov8" title="1">{
+                switch v := context.(type) </span>{
+                case wagerdto.WagerReq:<span class="cov8" title="1">
+                        return v.SellingPrice &gt; (float32(v.TotalWagerValue) * (float32(v.SellingPercentage) / 100))</span>
+                }
+                <span class="cov0" title="0">return false</span>
+        }))
+
+        <span class="cov8" title="1">govalidator.CustomTypeTagMap.Set("DecimalType", func(i interface{}, o interface{}) bool </span><span class="cov8" title="1">{
+                return len(strings.Split(fmt.Sprintf("%v", i.(float32)), ".")[1]) &lt;= 2
+        }</span>)
+}
+
+func (g *Gin) Response(httpCode int, success bool, data interface{}, err error) <span class="cov8" title="1">{
+        g.C.JSON(httpCode, gin.H{
+                "success": success,
+                "data":    data,
+                "error":   err,
+        })
+        return
+}</span>
+
+func (g *Gin) BindAndValidate(obj interface{}) bool <span class="cov8" title="1">{
+        err := g.C.ShouldBind(obj)
+        if err != nil </span><span class="cov0" title="0">{
+                g.Response(http.StatusBadRequest, false, nil, err)
+                return false
+        }</span>
+
+        <span class="cov8" title="1">isValid, err := govalidator.ValidateStruct(obj)
+        if err != nil || !isValid </span><span class="cov8" title="1">{
+                g.Response(http.StatusBadRequest, false, nil, err)
+                return false
+        }</span> else<span class="cov8" title="1"> {
+                return true
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handler
+
+import (
+        "errors"
+        "net/http"
+        "strconv"
+        "wagerservice/cmd/entity-server/registry"
+        "wagerservice/cmd/entity-server/service/wager"
+        "wagerservice/cmd/entity-server/service/wager/wagerdto"
+        "wagerservice/internal/pkg/ginutil"
+        "wagerservice/internal/pkg/msg"
+
+        "github.com/gin-gonic/gin"
+)
+
+type WagerHandler struct {
+        wagerService wager.WagerService
+        provider     registry.Provider
+}
+
+func NewWagerHandler(
+        wagerService wager.WagerService,
+        provider registry.Provider,
+) *WagerHandler <span class="cov8" title="1">{
+        return &amp;WagerHandler{
+                wagerService: wagerService,
+                provider:     provider,
+        }
+}</span>
+
+func (hdl *WagerHandler) Create(ctx *gin.Context) <span class="cov8" title="1">{
+        appG := Gin{C: ctx}
+        req := &amp;wagerdto.WagerReq{}
+
+        if isValid := appG.BindAndValidate(req); isValid </span><span class="cov8" title="1">{
+                objRes, err := hdl.wagerService.Create(req)
+                if err != nil </span><span class="cov0" title="0">{
+                        appG.Response(http.StatusBadRequest, false, nil, nil)
+                        return
+                }</span>
+                <span class="cov8" title="1">appG.Response(http.StatusCreated, true, objRes, nil)</span>
+        }
+}
+
+func (hdl *WagerHandler) List(ctx *gin.Context) <span class="cov8" title="1">{
+        appG := Gin{C: ctx}
+        pageOffset, pageLimit := ginutil.GetPage(ctx, hdl.provider.Config.DefaultPageNum, hdl.provider.Config.DefaultPageLimit)
+        filter := map[string]interface{}{
+                "page_limit":  pageLimit,
+                "page_offset": pageOffset,
+                "order_by":    ctx.Query("order_by"),
+                "order":       ctx.Query("order"),
+        }
+
+        objRes, total, err := hdl.wagerService.List(filter)
+        if err != nil </span><span class="cov0" title="0">{
+                appG.Response(http.StatusBadRequest, false, nil, nil)
+                return
+        }</span>
+
+        <span class="cov8" title="1">data := make(map[string]interface{})
+        data["data"] = objRes
+        data["total"] = total
+
+        appG.Response(http.StatusOK, true, data, nil)</span>
+}
+
+func (hdl *WagerHandler) Buy(ctx *gin.Context) <span class="cov8" title="1">{
+        appG := Gin{C: ctx}
+
+        wagerID, err := strconv.Atoi(ctx.Param("wager_id"))
+        if err != nil </span><span class="cov0" title="0">{
+                appG.Response(http.StatusBadRequest, false, nil, errors.New(msg.GetMsg(msg.INVALID_PARAMS)))
+                return
+        }</span>
+
+        <span class="cov8" title="1">req := &amp;wagerdto.WagerBuyingReq{
+                WagerID: uint(wagerID),
+        }
+
+        if isValid := appG.BindAndValidate(req); isValid </span><span class="cov8" title="1">{
+                objRes, err := hdl.wagerService.Buy(req)
+                if err != nil </span><span class="cov8" title="1">{
+                        appG.Response(http.StatusBadRequest, false, nil, err)
+                        return
+                }</span>
+                <span class="cov8" title="1">appG.Response(http.StatusCreated, true, objRes, nil)</span>
+        }
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

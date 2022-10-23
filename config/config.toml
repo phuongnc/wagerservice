@@ -1,0 +1,11 @@
+env=""
+server_port=8080
+db_connection = "admin:WagerService123@tcp(host.docker.internal:3306)/wager_dev?charset=utf8mb4&parseTime=True&loc=Local"
+default_page_num = 1
+default_page_limit = 10
+
+[LogConfig]
+format = "json"
+output = "file"
+path = "logs"
+expired = 3
