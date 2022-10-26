@@ -8,6 +8,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type ErrorRes struct {
@@ -15,7 +16,8 @@ type ErrorRes struct {
 }
 
 type Gin struct {
-	C *gin.Context
+	C   *gin.Context
+	log *logrus.Logger
 }
 
 func init() {
@@ -38,10 +40,15 @@ func init() {
 }
 
 func (g *Gin) Response(httpCode int, success bool, data interface{}, err error) {
+	var errMsg string
+	if err != nil {
+		errMsg = err.Error()
+		g.log.Error(err)
+	}
 	g.C.JSON(httpCode, gin.H{
 		"success": success,
 		"data":    data,
-		"error":   err,
+		"error":   errMsg,
 	})
 	return
 }

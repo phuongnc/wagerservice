@@ -48,7 +48,7 @@ func main() {
 	maxHeaderBytes := 1 << 20
 
 	server := &http.Server{
-		Addr:           "0.0.0.0:8080",
+		Addr:           endPoint,
 		Handler:        handler,
 		ReadTimeout:    readTimeout,
 		WriteTimeout:   writeTimeout,
