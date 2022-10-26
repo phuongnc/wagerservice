@@ -8,9 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"wagerservice/cmd/entity-server/handler"
-
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const (
@@ -48,7 +45,7 @@ func initRoutes(router *gin.Engine, provider *registry.Provider) {
 		wagerRouter.POST("buy/:wager_id", wagerHdl.Buy)
 		wagerRouter.GET("", wagerHdl.List)
 	}
-	router.GET(swaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
+	//router.GET(swaggerPath, ginSwagger.WrapHandler(swaggerfiles.Handler))
 }
 
 // healthz for checking service status

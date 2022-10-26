@@ -29,13 +29,13 @@ func NewWagerHandler(
 }
 
 func (hdl *WagerHandler) Create(ctx *gin.Context) {
-	appG := Gin{C: ctx}
+	appG := Gin{C: ctx, log: hdl.provider.Logger}
 	req := &wagerdto.WagerReq{}
 
 	if isValid := appG.BindAndValidate(req); isValid {
 		objRes, err := hdl.wagerService.Create(req)
 		if err != nil {
-			appG.Response(http.StatusBadRequest, false, nil, nil)
+			appG.Response(http.StatusBadRequest, false, nil, err)
 			return
 		}
 		appG.Response(http.StatusCreated, true, objRes, nil)
@@ -43,7 +43,7 @@ func (hdl *WagerHandler) Create(ctx *gin.Context) {
 }
 
 func (hdl *WagerHandler) List(ctx *gin.Context) {
-	appG := Gin{C: ctx}
+	appG := Gin{C: ctx, log: hdl.provider.Logger}
 	pageOffset, pageLimit := ginutil.GetPage(ctx, hdl.provider.Config.DefaultPageNum, hdl.provider.Config.DefaultPageLimit)
 	filter := map[string]interface{}{
 		"page_limit":  pageLimit,
@@ -54,7 +54,7 @@ func (hdl *WagerHandler) List(ctx *gin.Context) {
 
 	objRes, total, err := hdl.wagerService.List(filter)
 	if err != nil {
-		appG.Response(http.StatusBadRequest, false, nil, nil)
+		appG.Response(http.StatusBadRequest, false, nil, err)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (hdl *WagerHandler) List(ctx *gin.Context) {
 }
 
 func (hdl *WagerHandler) Buy(ctx *gin.Context) {
-	appG := Gin{C: ctx}
+	appG := Gin{C: ctx, log: hdl.provider.Logger}
 
 	wagerID, err := strconv.Atoi(ctx.Param("wager_id"))
 	if err != nil {

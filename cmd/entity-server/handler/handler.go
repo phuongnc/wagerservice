@@ -8,6 +8,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type ErrorRes struct {
@@ -15,7 +16,8 @@ type ErrorRes struct {
 }
 
 type Gin struct {
-	C *gin.Context
+	C   *gin.Context
+	log *logrus.Logger
 }
 
 func init() {
@@ -27,16 +29,26 @@ func init() {
 		return false
 	}))
 
-	govalidator.CustomTypeTagMap.Set("DecimalType", func(i interface{}, o interface{}) bool {
-		return len(strings.Split(fmt.Sprintf("%v", i.(float32)), ".")[1]) <= 2
+	govalidator.CustomTypeTagMap.Set("MonetaryType", func(i interface{}, o interface{}) bool {
+		strDecimal := fmt.Sprintf("%v", i.(float32))
+		arrDecimal := strings.Split(strDecimal, ".")
+		if len(arrDecimal) > 1 {
+			return len(arrDecimal[1]) <= 2
+		}
+		return true
 	})
 }
 
 func (g *Gin) Response(httpCode int, success bool, data interface{}, err error) {
+	var errMsg string
+	if err != nil {
+		errMsg = err.Error()
+		g.log.Error(err)
+	}
 	g.C.JSON(httpCode, gin.H{
 		"success": success,
 		"data":    data,
-		"error":   err,
+		"error":   errMsg,
 	})
 	return
 }
