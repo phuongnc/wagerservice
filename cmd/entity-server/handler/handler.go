@@ -27,8 +27,13 @@ func init() {
 		return false
 	}))
 
-	govalidator.CustomTypeTagMap.Set("DecimalType", func(i interface{}, o interface{}) bool {
-		return len(strings.Split(fmt.Sprintf("%v", i.(float32)), ".")[1]) <= 2
+	govalidator.CustomTypeTagMap.Set("MonetaryType", func(i interface{}, o interface{}) bool {
+		strDecimal := fmt.Sprintf("%v", i.(float32))
+		arrDecimal := strings.Split(strDecimal, ".")
+		if len(arrDecimal) > 1 {
+			return len(arrDecimal[1]) <= 2
+		}
+		return true
 	})
 }
 
